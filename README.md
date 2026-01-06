@@ -1,6 +1,6 @@
 # 🚆 Railway Departures Scraper
 
-This project fetches live train departure data from the iRail API and stores it in an Azure SQL database using an Azure Function written in Python.
+This project fetches live train departure data from the iRail API and stores it in an Azure SQL database using an Azure Function written in Python. I focused on Leuven as departure station.
 
 ## 🛠️ Project Setup
 
@@ -12,8 +12,8 @@ This project fetches live train departure data from the iRail API and stores it 
 - Then we created the Python function in VSCode to fetch data from the iRail API and insert it into the SQL database in VSCode (as I did not get the option via the web)
    ![alt text](<assets/Screenshot 2026-01-06 at 16.44.28.png>)
 
-### 2. Environment Setup
-- Installed Azure Functions & Azure Resources VSCode extensions
+### 2. VSCode Setup
+- Installed Azure Functions & Azure Resources extensions
 - Installed required Python packages
   ```bash
   pip install azure-functions requests pyodbc
@@ -21,26 +21,19 @@ This project fetches live train departure data from the iRail API and stores it 
 - Used Homebrew to install `ODBC Driver 18 for SQL Server`
 
 ### 3. Local Settings
-1. Before connecting to the database, tested the Azure Function locally
-    ```bash
-    func start
-    ```
-    ![alt text](<assets/Screenshot 2026-01-06 at 14.08.16.png>)    
-
-2. Create a `local.settings.json` file containing the environment variables:
-```json
-{
-  "IsEncrypted": false,
-  "Values": {
-    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-    "FUNCTIONS_WORKER_RUNTIME": "python",
-    "SQL_SERVER": "iraildb-server.database.windows.net,1433",
-    "SQL_DATABASE": "iRailDB",
-    "SQL_USER": "sqladmin",
-    "SQL_PASSWORD": "YOUR_PASSWORD"
-  }
-}
-```
+1. We started creating the function in VSCode (see reason above) as `http trigger` and confirmed it worked with 
+   ```bash
+   func start
+   ```
+   ![alt text](<assets/Screenshot 2026-01-06 at 14.08.16.png>)
+2. We then imported pyodbc and set up a `local.settings.json` file containing the credential and connection info
+3. Updated our function to fetch data from the API and process it locally
+   ![alt text](<assets/Screenshot 2026-01-06 at 14.17.02.png>)
+4. Then we updated the function to fetch the first 10 rows of data and add them to our database
+   ![alt text](<assets/Screenshot 2026-01-06 at 16.10.45.png>) 
+   and confirmed the rows were added to our database in Azure
+   ![alt text](<assets/Screenshot 2026-01-06 at 17.35.57.png>)
+5. Next we will update our function to fetch all rows
 
 ### 4. Fetch Data from iRail API
 
@@ -52,7 +45,7 @@ This project fetches live train departure data from the iRail API and stores it 
 
 ---
 
-### 4. Azure SQL Database Connection
+### 5. Azure SQL Database Connection
 
 * Connected using `pyodbc` and ODBC Driver 18.
 * Azure SQL firewall configured to allow the outgoing IP seen by Azure.
