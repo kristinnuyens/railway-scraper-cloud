@@ -1,5 +1,10 @@
-# Uncomment to enable Azure Monitor OpenTelemetry
-# Ref: aka.ms/functions-azure-monitor-python
-# azure-monitor-opentelemetry
-
+certifi==2026.1.4
+charset-normalizer==3.4.4
+idna==3.11
+pyodbc==5.3.0
+requests==2.32.5
+urllib3==2.6.2
 azure-functions
+requests
+pyodbc
+pytz

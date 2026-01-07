@@ -6,10 +6,7 @@ import os
 import time
 import pytz
 
-app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
-
-@app.route(route="fetch_leuven_departures", methods=["GET"])
-def fetch_leuven_departures(req: func.HttpRequest) -> func.HttpResponse:
+def main(req: func.HttpRequest) -> func.HttpResponse:
 
     # Database connection
     server = os.environ["SQL_SERVER"]

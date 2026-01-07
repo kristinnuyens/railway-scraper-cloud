@@ -7,11 +7,17 @@ database = os.environ.get("SQL_DATABASE", "iRailDB")
 username = os.environ.get("SQL_USER", "sqladmin")
 password = os.environ.get("SQL_PASSWORD", "zygten-xuxjyq-sEpzo0")
 driver = "{ODBC Driver 18 for SQL Server}"
-
+print("Connecting to SQL with server:", server)
 try:
     conn = pyodbc.connect(
-        f"DRIVER={driver};SERVER={server};DATABASE={database};UID={username};PWD={password};Encrypt=yes;TrustServerCertificate=yes",
-        timeout=5
+    f"DRIVER={driver};"
+    f"SERVER={server},1433;"
+    f"DATABASE={database};"
+    f"UID={username};"
+    f"PWD={password};"
+    "Encrypt=yes;"
+    "TrustServerCertificate=yes;",
+    timeout=5
     )
     cursor = conn.cursor()
     cursor.execute("SELECT 1 AS test")

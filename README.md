@@ -1,18 +1,45 @@
 # 🚆 Railway Departures Scraper
+This project fetches live train departure data from the iRail API and stores it in an Azure SQL database using an Azure Function written in Python. I will focus on Leuven as departure station.
 
-This project fetches live train departure data from the iRail API and stores it in an Azure SQL database using an Azure Function written in Python. I focused on Leuven as departure station.
-
-## 🛠️ Project Setup
-
-### 1. Azure Setup
-- We set up the SQL Server + Database (iraildb-server / iRailDB) for the Function App to store the scraped iRail data
-- We created a Storage Account (irailscraperproject9bff) as part of the Function App runtime requirement
-- We deployed the Function App (irail-scraper-project)
+## 🛠️ Project Approach
+### 1. Local Setup
+1. Clone the repository
+   ``` bash
+   git clone git@github.com:kristinnuyens/railway-scraper-cloud.git
+   ```
+2. Create and activate a virtual environment
+   ```bash
+   python3.10 -m venv .venv
+   source .venv/bin/activate
+   ```
+3. Install dependencies
+   ```bash
+   pip install -r requirements.txt
+   ```
+### 2. Azure Setup
+- I set up the SQL Server + Database (iraildb-server / iRailDB) for the Function App to store the scraped iRail data; creation of a table `departures` was done via the SQL Query Editor in Azure web
+  ```bash
+  CREATE TABLE departures (
+    id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
+    vehicle VARCHAR(MAX) NULL,
+    train_number VARCHAR(MAX) NULL,
+    train_type VARCHAR(MAX) NULL,
+    destination VARCHAR(MAX) NULL,
+    departure_time DATETIME NULL,
+    platform VARCHAR(MAX) NULL,
+    delay_seconds INT NULL,
+    canceled BIT NULL,
+    fetched_at DATETIME NULL,
+    departure_station NVARCHAR(100) NOT NULL
+   );
+   ```
+- A Storage Account (irailscraperproject9bff) was automatically created by Azure as a runtime requirement for the Function App
+- I deployed the Function App resource(irail-scraper-project)
   ![alt text](<assets/Screenshot 2026-01-06 at 14.09.02.png>)
-- Then we created the Python function in VSCode to fetch data from the iRail API and insert it into the SQL database in VSCode (as I did not get the option via the web)
+- Then I created the Python function locally in VSCode to fetch data from the iRail API and insert it into the SQL database in VSCode (as I did not get the option via the web) and linked it to the Function App
    ![alt text](<assets/Screenshot 2026-01-06 at 16.44.28.png>)
 
-### 2. VSCode Setup
+### 3. VSCode Setup
 - Installed Azure Functions & Azure Resources extensions
 - Installed required Python packages
   ```bash
@@ -20,109 +47,55 @@ This project fetches live train departure data from the iRail API and stores it 
   ```
 - Used Homebrew to install `ODBC Driver 18 for SQL Server`
 
-### 3. Local Settings
-1. We started creating the function in VSCode (see reason above) as `http trigger` and confirmed it worked with 
-   ```bash
-   func start
-   ```
-   ![alt text](<assets/Screenshot 2026-01-06 at 14.08.16.png>)
-2. We then imported pyodbc and set up a `local.settings.json` file containing the credential and connection info
-3. Updated our function to fetch data from the API and process it locally
-   ![alt text](<assets/Screenshot 2026-01-06 at 14.17.02.png>)
-4. Then we updated the function to fetch the first 10 rows of data and add them to our database
-   ![alt text](<assets/Screenshot 2026-01-06 at 16.10.45.png>) 
-   and confirmed the rows were added to our database in Azure
-   ![alt text](<assets/Screenshot 2026-01-06 at 17.35.57.png>)
-5. Next we will update our function to fetch all rows
-
 ### 4. Fetch Data from iRail API
-
-* Endpoint: `https://api.irail.be/liveboard/`
-* Station used: Leuven
-* JSON response parsed to extract departure information (vehicle, train number, type, destination, departure time, platform, delay, cancellation).
-
-*Screenshot placeholder: `assets/api_response.png`*
-
----
+I defined a Python HTTP-triggered Azure function in VSCode (see reason above) and confirmed it worked with 
+```bash
+func start
+```
+![alt text](<assets/Screenshot 2026-01-06 at 14.08.16.png>)
 
 ### 5. Azure SQL Database Connection
+1. Connected using `pyodbc` and ODBC Driver 18
+2. Configured Azure SQL firewall to allow the outgoing IP seen by Azure; later discovered an additional intermediate outbound IP (ISP-level, Telenet) that also needed firewall access
+3. Set up `local.settings.json` file containing the credential and connection info
 
-* Connected using `pyodbc` and ODBC Driver 18.
-* Azure SQL firewall configured to allow the outgoing IP seen by Azure.
-* Sample code snippet for connection:
+### 6. Azure Function Setup
+1. Updated the function to fetch data from the API (`https://api.irail.be/liveboard/`) and process it locally
+   ![alt text](<assets/Screenshot 2026-01-06 at 14.17.02.png>)
+2. Then updated the function to fetch the first 10 rows of data and add them to the database; extracted specific departure information (vehicle, train number, type, departure_station, destination, departure time, platform, delay, cancellation)
+   ![alt text](<assets/Screenshot 2026-01-06 at 16.10.45.png>) 
+   Confirmed the rows were added to the database in Azure
+   ![alt text](<assets/Screenshot 2026-01-06 at 17.35.57.png>)
+3. Next day I started with updating the function to first fetch current first 10 rows to add them to the database (before pulling all data); code was updated to also remove old irrelevant data from the database; confirmed that data in SQL database was updated
+   ![alt text](<assets/Screenshot 2026-01-07 at 09.55.07.png>)
+4. Updated function to fetch departures in the next 2 hours
+   
+   ![alt text](<assets/Screenshot 2026-01-07 at 15.55.06.png>)
 
-```python
-import os
-import pyodbc
+   Verified in the SQL Database; reran to see if indeed it kept on updating to the newer departures while removing old records
+5. Moved and updated code in order to deploy to Azure
 
-server = os.environ["SQL_SERVER"]
-database = os.environ["SQL_DATABASE"]
-username = os.environ["SQL_USER"]
-password = os.environ["SQL_PASSWORD"]
-driver = "{ODBC Driver 18 for SQL Server}"
+### 7. Current Status
+✅ Successfully fetched API data locally
 
-with pyodbc.connect(
-    f"DRIVER={driver};SERVER={server};DATABASE={database};UID={username};PWD={password}"
-) as conn:
-    cursor = conn.cursor()
-    # Insert data here
-```
+✅ Successfully inserted test data (first 10 rows) into Azure SQL database
 
-*Screenshot placeholder: `assets/sql_connection.png`*
+✅ Azure SQL connection requires correct firewall IP
 
----
+✅ Successfully programmed function to fetch next 2 hours departures from Leuven and add them into the Azure SQL database
 
-### 5. Azure Function Setup
+### 8. Next Steps / To Do
+* Deploy the Azure Function to the cloud
 
-* Defined a Python HTTP-triggered Azure Function:
-
-  ```bash
-  func start
-  ```
-* Route: `/api/fetch_leuven_departures`
-* Anonymous authentication for local testing.
-
-*Screenshot placeholder: `assets/azure_func_local.png`*
-
----
-
-### 6. Current Status
-
-* ✅ Successfully fetched API data locally.
-* ✅ Prepared data insertion into SQL database.
-* ⚠️ Azure SQL connection requires correct firewall IP.
-* Next steps: expand data collection, handle multiple stations, deploy to Azure.
-
----
-
-### 7. Next Steps / To Do
-
-* Extend to fetch multiple stations.
-* Add logging and error handling.
-* Deploy the Azure Function to the cloud.
-* Add automated testing for API response and database inserts.
-
----
-
-### 📸 Screenshots
-
-> Insert relevant screenshots in the `assets/` folder and reference them in sections above.
-
----
-
-### 📄 References
-
+## 📄 References
 * [iRail API Documentation](https://api.irail.be/)
-* [Azure Functions Python Developer Guide](https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference-python)
-* [Microsoft ODBC Driver 18 for SQL Server](https://learn.microsoft.com/en-us/sql/connect/odbc/microsoft-odbc-driver-for-sql-server)
 
----
+## 🧑‍💻 Contributors
 
-```
+Solo project:
 
----
+- Kristin Nuyens
 
-I can also make a **version with colorful emojis/icons for each step and small badges** (like Python version, Azure Functions version, SQL Server) so it looks extra professional and GitHub-ready.  
+## ⏰ Timeline
 
-Do you want me to make that fancier version next?
-```
+5 working days
