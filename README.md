@@ -73,10 +73,12 @@ func start
    ![alt text](<assets/Screenshot 2026-01-07 at 15.55.06.png>)
 
    Verified in the SQL Database; reran to see if indeed it kept on updating to the newer departures while removing old records
-5. Deployed to Azure, but function would not show up in function app; installed azure-CLI via homebrew; force redeployed my function app via terminal
+5. Deployed to Azure, but function would not show up in function app; installed azure-CLI via homebrew; ensured requirements.txt was complete and pushed to git; force redeployed my function app via terminal to make it show
    ```bash
    func azure functionapp publish iRailDB-scraper --python --force
    ```
+   ![alt text](<assets/Screenshot 2026-01-08 at 10.08.38.png>)
+   Function URL is: https://iraildb-scraper-h9ffbea2gzene5e5.swedencentral-01.azurewebsites.net/api/fetch_leuven_departures
 
 ## 📄 References
 * [iRail API Documentation](https://api.irail.be/)

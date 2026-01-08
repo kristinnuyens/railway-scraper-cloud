@@ -5,6 +5,11 @@ from datetime import datetime, timedelta
 import os
 import time
 import pytz
+import logging
+
+logging.info(f"DB_HOST = {os.getenv('DB_HOST')}")
+logging.info(f"DB_USER = {os.getenv('DB_USER')}")
+logging.info(f"DB_NAME = {os.getenv('DB_NAME')}")
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
