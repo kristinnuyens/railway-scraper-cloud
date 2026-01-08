@@ -6,6 +6,7 @@ import os
 import time
 import pytz
 import logging
+import json
 
 # Initialize the FunctionApp
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
@@ -122,4 +123,11 @@ def fetch_leuven_departures(req: func.HttpRequest) -> func.HttpResponse:
 
     conn.close()
     logging.info(f"Inserted {len(deduped_rows)} departures")
-    return func.HttpResponse(f"Inserted {len(deduped_rows)} departures")
+    return func.HttpResponse(
+    json.dumps({
+        "status": "success",
+        "inserted_rows": len(deduped_rows)
+    }),
+    status_code=200,
+    mimetype="application/json"
+)
