@@ -35,8 +35,11 @@ This project fetches live train departure data from the iRail API and stores it 
    ```
 - A Storage Account (irailscraperproject9bff) was automatically created by Azure as a runtime requirement for the Function App
 - I deployed the Function App resource(irail-scraper-project)
+  
   ![Function App Deployed](<assets/Screenshot 2026-01-06 at 14.09.02.png>)
+
 - Then I created the Python function locally in VSCode to fetch data from the iRail API and insert it into the SQL database in VSCode (as I did not get the option via the web) and linked it to the Function App
+ 
    ![No option to create function in Azure web](<assets/Screenshot 2026-01-06 at 16.44.28.png>)
 
 ### 3. VSCode Setup
@@ -61,12 +64,16 @@ func start
 
 ### 6. Azure Function Setup
 1. Updated Python http-triggered Azure function (`fetch_leuven_departures`) in VSCode to fetch departures from iRail API (`https://api.irail.be/liveboard/`)
+
    ![Fetched API data](<assets/Screenshot 2026-01-06 at 14.17.02.png>)
 2. Then updated the function to fetch the first 10 rows of data and add them to the database; extracted specific departure information (vehicle, train number, type, departure_station, destination, departure time, platform, delay, cancellation)
+   
    ![Test rows inserted in Azure DB](<assets/Screenshot 2026-01-06 at 16.10.45.png>) 
    Confirmed the rows were added to the database in Azure
+
    ![Confirmed in Azure DB](<assets/Screenshot 2026-01-06 at 17.35.57.png>)
 3. Next day I started with updating the function to first fetch current first 10 rows to add them to the database (before pulling all data); code was updated to also remove old irrelevant data from the database; confirmed that data in SQL database was updated
+   
    ![Inserted new/update records in Azure DB](<assets/Screenshot 2026-01-07 at 09.55.07.png>)
 4. Updated function to fetch departures in the next 2 hours
    
@@ -78,6 +85,7 @@ func start
    func azure functionapp publish iRailDB-scraper --python --force
    ```
    ![Function finally showing up in Function App on Azure web](<assets/Screenshot 2026-01-08 at 10.08.38.png>)
+
    Added logging to the function as I keep on returning errors; needed to add credentials to environment variables in function app:
    | Variable     | Purpose             |
    | ------------ | ------------------- |
@@ -85,9 +93,12 @@ func start
    | SQL_DATABASE | Database name       |
    | SQL_USER     | Username            |
    | SQL_PASSWORD | Password            |
+   
    Another IP address added to the firewall; test/run successful!
+
    ![Test/Run successful](<assets/Screenshot 2026-01-08 at 11.15.57.png>)
 6. Updated data in the Azure DB!
+   
    ![Azure DB with updated records](<assets/Screenshot 2026-01-08 at 11.16.34.png>)
 
 ## 🔗 Function URL
