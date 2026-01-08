@@ -28,36 +28,20 @@ def fetch_leuven_departures(req: func.HttpRequest) -> func.HttpResponse:
     password = os.environ.get("SQL_PASSWORD")
     driver = "{ODBC Driver 18 for SQL Server}"
 
-    MAX_RETRIES = 5
-    BASE_WAIT = 2  # seconds
-
-    conn = None
-    for attempt in range(1, MAX_RETRIES + 1):
-        try:
-            logging.info(f"DB connection attempt {attempt}")
-            conn = pyodbc.connect(
-                f"DRIVER={driver};"
-                f"SERVER={server};"
-                f"DATABASE={database};"
-                f"UID={username};"
-                f"PWD={password};"
-                "Encrypt=yes;"
-                "TrustServerCertificate=yes;",
-                timeout=5
-            )
-            break  # success
-        except Exception as e:
-            logging.warning(f"DB connection attempt {attempt} failed: {e}")
-
-            if attempt == MAX_RETRIES:
-                logging.error("Database connection failed after retries")
-                return func.HttpResponse(
-                    "Database connection failed after retries",
-                    status_code=500
-                )
-
-            sleep_time = BASE_WAIT * (2 ** (attempt - 1))
-            time.sleep(sleep_time)
+    try:
+        conn = pyodbc.connect(
+            f"DRIVER={driver};"
+            f"SERVER={server};"
+            f"DATABASE={database};"
+            f"UID={username};"
+            f"PWD={password};"
+            "Encrypt=yes;"
+            "TrustServerCertificate=yes;",
+            timeout=5
+        )
+    except Exception as e:
+        logging.error(f"Database connection failed: {e}")
+        return func.HttpResponse("Database connection failed", status_code=500)
 
     cursor = conn.cursor()
 
