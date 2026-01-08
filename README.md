@@ -79,7 +79,10 @@ func start
    ```
    ![alt text](<assets/Screenshot 2026-01-08 at 10.08.38.png>)
    Function URL is: https://iraildb-scraper-h9ffbea2gzene5e5.swedencentral-01.azurewebsites.net/api/fetch_leuven_departures
-   Added logging to the function as 
+   Added logging to the function as I keep on returning errors; needed to add credentials to environment variables in function app; another IP address added to the firewall; test/run successful!
+   ![alt text](<assets/Screenshot 2026-01-08 at 11.15.57.png>)
+6. Updated data in the Azure DB!
+   ![alt text](<assets/Screenshot 2026-01-08 at 11.16.34.png>)
 
 ## 📄 References
 * [iRail API Documentation](https://api.irail.be/)
