@@ -94,7 +94,7 @@ func start
    | SQL_USER     | Username            |
    | SQL_PASSWORD | Password            |
    
-   Another IP address added to the firewall; test/run successful!
+   Another IP address added to the firewall; test/run successful! Added retry logic as I kept on seeing too many Azure DB Connectivity issues
 
    ![Test/Run successful](<assets/Screenshot 2026-01-08 at 11.15.57.png>)
 6. Updated data in the Azure DB!
