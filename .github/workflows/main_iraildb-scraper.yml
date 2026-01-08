@@ -7,15 +7,15 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: 'railway-scraper-cloud'  # Path to your Function App root
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: railway-scraper-cloud
   PYTHON_VERSION: '3.10'
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: read  # Required for actions/checkout
-      id-token: write  # Required for Azure login
+      contents: read
+      id-token: write
 
     steps:
       - name: Checkout repository
@@ -26,24 +26,15 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install dependencies in virtual environment
-        working-directory: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-        run: |
-          python3.10 -m venv .venv
-          source .venv/bin/activate
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Login to Azure
+      - name: Azure Login
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_39B115D8A183427DA7380344171864AF }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_1A81F4F3D4E84A5B959490C77AEE0B6B }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_F4A3DFA716AF4EC88FAEA06B2BC1C96F }}
 
-      - name: Deploy to Azure Functions
+      - name: Deploy Azure Function App
         uses: Azure/functions-action@v1
         with:
-          app-name: 'iRailDB-scraper'
-          slot-name: 'Production'
+          app-name: iRailDB-scraper
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
