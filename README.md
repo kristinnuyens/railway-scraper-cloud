@@ -79,6 +79,7 @@ func start
    ```
    ![alt text](<assets/Screenshot 2026-01-08 at 10.08.38.png>)
    Function URL is: https://iraildb-scraper-h9ffbea2gzene5e5.swedencentral-01.azurewebsites.net/api/fetch_leuven_departures
+   Added logging to the function as 
 
 ## 📄 References
 * [iRail API Documentation](https://api.irail.be/)

@@ -7,24 +7,18 @@ import time
 import pytz
 import logging
 
-# Initialize the FunctionApp
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
 @app.route(route="fetch_leuven_departures", methods=["GET"])
 def fetch_leuven_departures(req: func.HttpRequest) -> func.HttpResponse:
 
-    logging.info("Function started")
-
     # Database connection
-    server = os.environ.get("SQL_SERVER")
-    if not server:
-        return func.HttpResponse("SQL_SERVER environment variable missing", status_code=500)
+    server = os.environ["SQL_SERVER"]
     if "," not in server:
         server = f"{server},1433"
-
-    database = os.environ.get("SQL_DATABASE")
-    username = os.environ.get("SQL_USER")
-    password = os.environ.get("SQL_PASSWORD")
+    database = os.environ["SQL_DATABASE"]
+    username = os.environ["SQL_USER"]
+    password = os.environ["SQL_PASSWORD"]
     driver = "{ODBC Driver 18 for SQL Server}"
 
     try:
@@ -38,22 +32,14 @@ def fetch_leuven_departures(req: func.HttpRequest) -> func.HttpResponse:
             "TrustServerCertificate=yes;",
             timeout=5
         )
-    except Exception as e:
-        logging.error(f"Database connection failed: {e}")
+    except Exception:
         return func.HttpResponse("Database connection failed", status_code=500)
 
     cursor = conn.cursor()
-
     # Clear old departures
-    try:
-        cursor.execute("DELETE FROM departures;")
-        conn.commit()
-    except Exception as e:
-        logging.error(f"Failed to clear old departures: {e}")
-        conn.close()
-        return func.HttpResponse("Failed to clear old departures", status_code=500)
+    cursor.execute("DELETE FROM departures;")
+    conn.commit()
 
-    # Fetch data from API
     url = "https://api.irail.be/v1/liveboard/"
     station = "Leuven"
     params = {"station": station, "format": "json", "lang": "en"}
@@ -64,6 +50,7 @@ def fetch_leuven_departures(req: func.HttpRequest) -> func.HttpResponse:
     now_local = pytz.utc.localize(now_utc).astimezone(tz)
     window_end = now_local + timedelta(hours=2)
 
+    # Sweep future windows: every 15 min for 2 hours
     for minutes_ahead in range(0, 120, 15):
         future_time = now_local + timedelta(minutes=minutes_ahead)
         params["date"] = future_time.strftime("%d%m%y")
@@ -73,13 +60,16 @@ def fetch_leuven_departures(req: func.HttpRequest) -> func.HttpResponse:
             response = requests.get(url, params=params, timeout=15)
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
-            logging.error(f"API request failed for {params}: {e}")
+            print(f"API request failed for {params}: {e}")
             continue
 
         departures = response.json().get("departures", {}).get("departure", [])
         for d in departures:
+            # Convert API timestamp to local timezone
             dt = datetime.utcfromtimestamp(int(d["time"]))
             dt_local = pytz.utc.localize(dt).astimezone(tz)
+
+            # Only include departures in the next 2 hours
             if now_local <= dt_local <= window_end:
                 rows.append((
                     station,
@@ -96,30 +86,25 @@ def fetch_leuven_departures(req: func.HttpRequest) -> func.HttpResponse:
 
         time.sleep(0.25)
 
-    # Deduplicate
+    # Deduplicate based on vehicle + train_number + departure_time
     seen = set()
     deduped_rows = []
     for r in rows:
-        key = (r[1], r[2], r[5])
+        key = (r[1], r[2], r[5])  # vehicle, train_number, departure_time
         if key not in seen:
             deduped_rows.append(r)
             seen.add(key)
 
-    # Insert into DB
+    # Insert into database
     if deduped_rows:
-        try:
-            cursor.executemany("""
-                INSERT INTO departures
-                (departure_station, vehicle, train_number, train_type, destination,
-                 departure_time, platform, delay_seconds, canceled, fetched_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, deduped_rows)
-            conn.commit()
-        except Exception as e:
-            logging.error(f"DB insert failed: {e}")
-            conn.close()
-            return func.HttpResponse("Failed to insert departures", status_code=500)
+        cursor.executemany("""
+            INSERT INTO departures
+            (departure_station, vehicle, train_number, train_type, destination,
+             departure_time, platform, delay_seconds, canceled, fetched_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, deduped_rows)
+        conn.commit()
 
     conn.close()
-    logging.info(f"Inserted {len(deduped_rows)} departures")
+
     return func.HttpResponse(f"Inserted {len(deduped_rows)} departures")
