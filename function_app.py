@@ -28,8 +28,8 @@ def fetch_leuven_departures(req: func.HttpRequest) -> func.HttpResponse:
     password = os.environ.get("SQL_PASSWORD")
     driver = "{ODBC Driver 18 for SQL Server}"
 
-    MAX_RETRIES = 5
-    BASE_WAIT = 2  # seconds
+    MAX_RETRIES = 10
+    BASE_WAIT = 4  # seconds
 
     conn = None
     for attempt in range(1, MAX_RETRIES + 1):
@@ -50,10 +50,14 @@ def fetch_leuven_departures(req: func.HttpRequest) -> func.HttpResponse:
             logging.warning(f"DB connection attempt {attempt} failed: {e}")
 
             if attempt == MAX_RETRIES:
-                logging.error("Database connection failed after retries")
+                logging.exception("Database connection failed after retries")
                 return func.HttpResponse(
-                    "Database connection failed after retries",
-                    status_code=500
+                    json.dumps({
+                        "status": "error",
+                        "message": "Database connection failed after retries"
+                    }),
+                    status_code=500,
+                    mimetype="application/json"
                 )
 
             sleep_time = BASE_WAIT * (2 ** (attempt - 1))
