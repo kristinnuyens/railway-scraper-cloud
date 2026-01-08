@@ -73,19 +73,10 @@ func start
    ![alt text](<assets/Screenshot 2026-01-07 at 15.55.06.png>)
 
    Verified in the SQL Database; reran to see if indeed it kept on updating to the newer departures while removing old records
-5. Moved and updated code in order to deploy to Azure
-
-### 7. Current Status
-✅ Successfully fetched API data locally
-
-✅ Successfully inserted test data (first 10 rows) into Azure SQL database
-
-✅ Azure SQL connection requires correct firewall IP
-
-✅ Successfully programmed function to fetch next 2 hours departures from Leuven and add them into the Azure SQL database
-
-### 8. Next Steps / To Do
-* Deploy the Azure Function to the cloud
+5. Deployed to Azure, but function would not show up in function app; installed azure-CLI via homebrew; force redeployed my function app via terminal
+   ```bash
+   func azure functionapp publish iRailDB-scraper --python --force
+   ```
 
 ## 📄 References
 * [iRail API Documentation](https://api.irail.be/)
