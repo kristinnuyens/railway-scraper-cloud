@@ -111,19 +111,24 @@ I tried to connect my Azure SQL DB to Tableau Public. Since that was not feasibl
 SELECT
     FORMAT(departure_time, 'HH:mm') AS departure_time,
     destination,
-    platform,
     CASE 
-        WHEN delay_seconds > 0 THEN CAST(delay_seconds / 60.0 AS DECIMAL(5,2))
-        ELSE NULL
+        WHEN canceled = 1 THEN '--'
+        ELSE platform
+    END AS platform,
+    CASE 
+        WHEN delay_seconds > 0 THEN delay_seconds / 60
+        ELSE NULL 
     END AS delay_minutes,
-    canceled,
+    CASE 
+        WHEN canceled = 1 THEN 'X'
+        ELSE NULL 
+    END AS canceled,
     train_type,
     train_number
 FROM [dbo].[departures]
 ORDER BY departure_time;
 ```
-![Nicer visual display in Azure SQL DB](<assets/Screenshot 2026-01-09 at 12.23.19.png>)
-
+![Nicer visual display in Azure SQL DB](<assets/Screenshot 2026-01-09 at 12.35.10.png>)
 ## ✅ Project Status (Must-Have Submission Checklist)
 
 - ✅ Deployed Azure Function App (HTTP endpoint)
