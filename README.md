@@ -105,6 +105,25 @@ func start
 This URL triggers the function to execute and fetch and insert live data into the SQL Database:
 https://iraildb-scraper-h9ffbea2gzene5e5.swedencentral-01.azurewebsites.net/api/fetch_leuven_departures
 
+## 🕒 Visual Display of Timetable
+I tried to connect my Azure SQL DB to Tableau Public. Since that was not feasible directly, I attempted to do this via Google Sheets, but eventually ran into error related to my data format, which was "not yet" supported somehow. I decided to stop pursuing this option, and cleared my requirements back to the bare minimum. Instead I tried to make my SQL query in Azure nicer providing some of a visual display there...
+```bash
+SELECT
+    FORMAT(departure_time, 'HH:mm') AS departure_time,
+    destination,
+    platform,
+    CASE 
+        WHEN delay_seconds > 0 THEN CAST(delay_seconds / 60.0 AS DECIMAL(5,2))
+        ELSE NULL
+    END AS delay_minutes,
+    canceled,
+    train_type,
+    train_number
+FROM [dbo].[departures]
+ORDER BY departure_time;
+```
+![Nicer visual display in Azure SQL DB](<assets/Screenshot 2026-01-09 at 12.23.19.png>)
+
 ## ✅ Project Status (Must-Have Submission Checklist)
 
 - ✅ Deployed Azure Function App (HTTP endpoint)
